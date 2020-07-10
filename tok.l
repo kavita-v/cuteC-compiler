@@ -24,6 +24,11 @@ id  {L}({L}|{D})*
 "/*"          { comment(); }
 "while"       { return WHILE; }
 "<"           { yylval.val=2;return RELOP; }
+">"           {yylval.val=2;return RELOP;  }
+">="          {yylval.val=2;return RELOP;  } 
+"<="          {yylval.val=2;return RELOP;  }
+"!="          {yylval.val=2;return RELOP;  }
+"=="          {yylval.val=2;return RELOP;  }
 {number}      { sscanf(yytext,"%d",&yylval.val);return NUM; }
 "return"      { return RETURN; }
 "int"         { yylval.val=1;return TYPE; }

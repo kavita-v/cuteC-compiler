@@ -1,0 +1,5 @@
+*.tab.c
+*.tab.h
+*.asm
+*.yy.c
+*.out

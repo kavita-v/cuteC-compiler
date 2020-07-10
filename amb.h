@@ -16,6 +16,12 @@ symrec *getsym ();
 typedef struct StmtsNode *stmtsptr;
 typedef struct StmtNode *stmtptr;
 
+typedef enum {
+  RETURN_STATEMENT,
+  DEFINE_VAR,
+  WHILE_SYNTAX
+} StmtType;
+
 struct StmtsNode{
 int singl;
 struct StmtNode *left;
@@ -23,11 +29,13 @@ struct StmtsNode *right;
 };
 
 struct StmtNode{
-   int isWhile;
-   char initCode[100];
-   char initJumpCode[20];
-   char bodyCode[1000];
-   struct StmtsNode *down;
+  StmtType type;
+  char bodyCode[1000];
+  struct StmtsNode *down;
+  union {
+    char initCode[100];
+    char initJumpCode[20];
+  };
 };
 
 

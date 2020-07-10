@@ -79,8 +79,8 @@ stmt:
 ret_stmt:
     RETURN exp ';' 
     {
-        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->isWhile=0;
-	    sprintf($$->bodyCode,"\n%s\nli $v0, 1\nmove $a0,$t0\nsyscall\n", $2);
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=RETURN_STATEMENT;
+	    sprintf($$->bodyCode,"\n%s\nli $v0, 1\nmove $a0,$t0\nsyscall\n\nli $v0, 10\nsyscall\n", $2);
 	    $$->down=NULL;
     }
 ;
@@ -88,9 +88,9 @@ ret_stmt:
 while_loop:
     WHILE '(' VAR RELOP VAR ')' '{' stmts '}' /* Put exp in place of VAR RELOP VAR and change the code accordingly*/
     {
-        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->isWhile=1;
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=WHILE_SYNTAX;
         sprintf($$->initCode,"lw $t0, %s($t8)\nlw $t1, %s($t8)\n", $3->addr,$5->addr);
-        sprintf($$->initJumpCode,"bge $t0, $t1,");
+        sprintf($$->initJumpCode,"bge $t0, $t1,"); 
         $$->down=$8;
 	}
 ;
@@ -98,7 +98,7 @@ while_loop:
 var_decl:
     TYPE VAR '=' exp ';'
     {
-        printf("Test1");$$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->isWhile=0;
+        printf("Test1");$$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=DEFINE_VAR;
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $4, $2->addr);
 	    $$->down=NULL;
     }
@@ -140,7 +140,7 @@ void StmtTrav(stmtptr ptr){
     int ws,nj;
     printf("stmt\n");
     if (ptr==NULL) return;
-    if (ptr->isWhile==0){
+    if (ptr->type!=WHILE_SYNTAX){
         fprintf(fp,"%s\n",ptr->bodyCode);
     } else {
         ws=whileStart; whileStart++;

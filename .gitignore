@@ -3,3 +3,4 @@
 *.asm
 *.yy.c
 *.out
+*.o

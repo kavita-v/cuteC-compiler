@@ -124,7 +124,7 @@ if_stmt:
 var_decl:
     TYPE VAR '=' exp ';'
     {
-        printf("Test1");$$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=DEFINE_VAR;
+        $$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=DEFINE_VAR;
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $4, $2->addr);
 	    $$->down=NULL;
     }
@@ -207,7 +207,7 @@ void StmtTrav(stmtptr ptr){
 int main ()
 {
    fp=fopen("asmb.asm","w");
-   fprintf(fp,".data\n\n.text\n");
+   fprintf(fp,".data\n\n.text\nli $t8,268500992\n"); //added li $t8 command to store initial memory address for symbol table
    yyparse ();
    ASTTrav(final);
    fclose(fp);

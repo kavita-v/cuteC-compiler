@@ -49,7 +49,7 @@ struct ASTNode *ASTptr;
 %type  <c>  exp relop_exp
 %type <nData> x
 %type <ASTptr> stmts
-%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt
+%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign
 
 %right '='
 %left '-' '+'
@@ -85,6 +85,8 @@ stmt:
     if_stmt {$$ = $1; }
     |
     var_decl { $$ = $1; }
+    |
+    var_assign { $$ = $1; }
     ;
 
 ret_stmt:
@@ -128,7 +130,23 @@ var_decl:
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $4, $2->addr);
 	    $$->down=NULL;
     }
+    |
+    TYPE VAR ';'
+    {
+        $$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=DEFINE_VAR;
+	    sprintf($$->bodyCode,"li $t0, 0\nsw $t0,%s($t8)\n", $2->addr);
+	    $$->down=NULL;
+        // since no value is assigned, we only need to allocate memory. We will use 0 as the garbage value.
+    }
 ;
+
+var_assign:
+    VAR '=' exp ';'
+    {
+        $$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=ASSIGN_VAR;
+	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $3, $1->addr);
+	    $$->down=NULL;
+    }
 
 relop_exp:
     x {}//TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.

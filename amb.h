@@ -20,7 +20,8 @@ typedef enum {
   RETURN_STATEMENT,
   DEFINE_VAR,
   WHILE_SYNTAX,
-  IF_SYNTAX
+  IF_SYNTAX,
+  ASSIGN_VAR
 } StmtType;
 
 struct ASTNode{

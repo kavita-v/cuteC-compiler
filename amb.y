@@ -29,7 +29,7 @@ char *fresh_local_label(char *prefix, int label_count) {
 %union {
 int   val;  /* For returning numbers.                   */
 struct symrec  *tptr;   /* For returning symbol-table pointers      */
-char c[1000];
+char c[10000];
 char nData[100];
 struct StmtNode *stmtptr;
 struct ASTNode *ASTptr;
@@ -55,8 +55,8 @@ struct ASTNode *ASTptr;
 
 %right '='
 %left '-' '+'
-%left '*' '/'
-
+%left '*' '/' '%'
+%left NEG
 
 /* Grammar follows */
 
@@ -97,6 +97,13 @@ stmt:
 
 ret_stmt:
     RETURN exp ';' 
+    {
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=RETURN_STATEMENT;
+	    sprintf($$->bodyCode,"\n%s\nli $v0, 1\nmove $a0,$t0\nsyscall\n\nli $v0, 10\nsyscall\n", $2);
+	    $$->down=NULL;
+    }
+    |
+    RETURN relop_exp ';'
     {
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=RETURN_STATEMENT;
 	    sprintf($$->bodyCode,"\n%s\nli $v0, 1\nmove $a0,$t0\nsyscall\n\nli $v0, 10\nsyscall\n", $2);
@@ -196,13 +203,17 @@ exp-option:
 exp:      
     x              { sprintf($$,"%s",$1); count=(count+1)%2; }
     |
-    x '+' x        { sprintf($$,"%s\n%s\nadd $t0, $t0, $t1",$1,$3); }
+    exp '+' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nadd $t0, $t0, $t1",$1,$3); }
     | 
-    x '-' x        { sprintf($$,"%s\n%s\nsub $t0, $t0, $t1",$1,$3); }
+    exp '-' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nsub $t0, $t0, $t1",$1,$3); }
     | 
-    x '*' x        { sprintf($$,"%s\n%s\nmul $t0, $t0, $t1",$1,$3); }
+    exp '*' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nmul $t0, $t0, $t1",$1,$3); }
     |
-    x '/' x        { sprintf($$,"%s\n%s\ndiv $t0, $t0, $t1",$1,$3); }
+    exp '/' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\ndiv $t0, $t0, $t1",$1,$3); }
+    | 
+    '-' exp  %prec NEG { sprintf($$,"%s\nsub $t0, $zero, $t0",$2); }
+    | 
+    '(' exp ')'        { sprintf($$,$2); }
 ;
 
 x:   

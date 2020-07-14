@@ -12,6 +12,8 @@ Open asmb.asm file in Mars. Assemble and Run.
 - Program should have exactly one int main() function. 
 - Only one return statement that terminates the program. Return value is printed out.
 - Unterminated multiline comments identified.
+- Declare variables of type int
+- Return arithmetic expressions (like a+b)
 
 ## Contributors:
 - Kavita Vaishnaw

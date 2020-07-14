@@ -147,6 +147,13 @@ var_assign:
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $3, $1->addr);
 	    $$->down=NULL;
     }
+    |
+    VAR '=' var_assign
+    {
+        $$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=ASSIGN_VAR;
+	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $3->bodyCode, $1->addr);
+	    $$->down=NULL;
+    }
 
 relop_exp:
     x {}//TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.

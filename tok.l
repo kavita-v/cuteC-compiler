@@ -35,6 +35,8 @@ id  {L}({L}|{D})*
 "return"      { return RETURN; }
 "int"         { yylval.val=1;return TYPE; }
 "main"        { symrec *s; s=getsym(yytext); if(s==0) s=putsym(yytext,MAIN); yylval.tptr=s; return MAIN; }
+"printf"      {sscanf(yytext,"%s",yylval.nData); return SYSCALL;}
+"\"%d\""|"'%d'"     {return FORMAT;}
 {id}          { symrec *s; s=getsym(yytext); if(s==0) s=putsym(yytext,VAR); yylval.tptr=s; return VAR; }
 .             { return yytext[0]; }
 %%

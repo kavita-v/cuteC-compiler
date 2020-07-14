@@ -43,13 +43,15 @@ struct ASTNode *ASTptr;
 %token  WHILE
 %token FOR
 %token IF
-%token RETURN
+%token RETURN FORMAT
 %token <val> TYPE
 %token <tptr> MAIN VAR  
+%token <nData> SYSCALL
 %type  <c>  exp relop_exp
 %type <nData> x
 %type <ASTptr> stmts
-%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign exp_as_stmt
+%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign exp_as_stmt syscll
+
 
 %right '='
 %left '-' '+'
@@ -89,6 +91,8 @@ stmt:
     var_assign { $$ = $1; }
     |
     exp_as_stmt { $$ = $1; }
+    |
+    syscll { $$ = $1;}
     ;
 
 ret_stmt:
@@ -168,6 +172,17 @@ exp_as_stmt:
     }
 ;
 
+syscll:
+    SYSCALL '(' FORMAT ',' exp  ')' ';'
+    {
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=SYSCALL_SYNTAX;
+        if (strcmp($1,"printf") == 0) {
+            sprintf($$->bodyCode,"%s", $5);
+            }
+        
+    }
+;
+
 relop_exp:
     x {}//TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
 ;
@@ -237,7 +252,11 @@ void StmtTrav(stmtptr ptr){
         ASTTrav(ptr->down);
         fprintf(fp,"j %s\n %s:\n",end_label, end_label);
        
-    } else {
+    } else if (ptr->type==SYSCALL_SYNTAX){
+        fprintf(fp,"%s\n",ptr->bodyCode);
+        fprintf(fp, "li $v0, 1\nmove $a0, $t0\nsyscall\n"); //assuming exp is stored in $t0 TODO: @mohit chnge
+        
+    }else{
         fprintf(fp,"%s\n",ptr->bodyCode);
     }	  
 }

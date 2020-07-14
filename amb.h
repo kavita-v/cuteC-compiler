@@ -22,7 +22,8 @@ typedef enum {
   WHILE_SYNTAX,
   IF_SYNTAX,
   ASSIGN_VAR,
-  EXP_STATEMENT
+  EXP_STATEMENT,
+  SYSCALL_SYNTAX
 } StmtType;
 
 struct ASTNode{

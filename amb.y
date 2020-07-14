@@ -49,7 +49,7 @@ struct ASTNode *ASTptr;
 %type  <c>  exp relop_exp
 %type <nData> x
 %type <ASTptr> stmts
-%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign
+%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign exp_as_stmt
 
 %right '='
 %left '-' '+'
@@ -87,6 +87,8 @@ stmt:
     var_decl { $$ = $1; }
     |
     var_assign { $$ = $1; }
+    |
+    exp_as_stmt { $$ = $1; }
     ;
 
 ret_stmt:
@@ -122,6 +124,7 @@ if_stmt:
         sprintf($$->initJumpCode,"bge $t0, $0,"); //TODO: change $t0 register here  
         $$->down=$6;
     }
+;
 
 var_decl:
     TYPE VAR '=' exp ';'
@@ -154,6 +157,16 @@ var_assign:
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $3->bodyCode, $1->addr);
 	    $$->down=NULL;
     }
+;
+
+exp_as_stmt:
+    exp ';'
+    {
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=EXP_STATEMENT;
+	    sprintf($$->bodyCode,"%s\n", $1);
+	    $$->down=NULL;
+    }
+;
 
 relop_exp:
     x {}//TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.

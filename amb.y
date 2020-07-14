@@ -8,15 +8,22 @@
 int  yylex(void);
 void yyerror (char  *);
 
-int whileStart=0,nextJump=0; /*two separate variables not necessary for this application*/
 int count=0;
-int labelCount=0;
+int label_count=0;
 FILE *fp;
 
-struct StmtsNode *final;
-void StmtsTrav(stmtsptr ptr);
+struct ASTNode *final;
+void ASTTrav(ASTptr ptr);
 void StmtTrav(stmtptr ptr);
 
+char *fresh_local_label(char *prefix, int label_count) {
+    // We assume we never write more than 6 chars of digits, plus a '.' and '_'.
+    size_t buffer_size = strlen(prefix) + 8;
+    char *buffer = malloc(buffer_size);
+
+    snprintf(buffer, buffer_size, ".%s_%d", prefix, label_count);
+    return buffer;
+}
 %}
 
 %union {
@@ -25,7 +32,7 @@ struct symrec  *tptr;   /* For returning symbol-table pointers      */
 char c[1000];
 char nData[100];
 struct StmtNode *stmtptr;
-struct StmtsNode *stmtsptr;
+struct ASTNode *ASTptr;
 }
 
 
@@ -34,13 +41,15 @@ struct StmtsNode *stmtsptr;
 %token  <val> NUM        /* Integer   */
 %token <val> RELOP
 %token  WHILE
+%token FOR
+%token IF
 %token RETURN
 %token <val> TYPE
 %token <tptr> MAIN VAR  
-%type  <c>  exp
+%type  <c>  exp relop_exp
 %type <nData> x
-%type <stmtsptr> stmts
-%type <stmtptr> while_loop var_decl ret_stmt stmt
+%type <ASTptr> stmts
+%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt
 
 %right '='
 %left '-' '+'
@@ -57,13 +66,13 @@ prog:
 stmts: 
     stmt
     {
-        $$ = (struct StmtsNode *) malloc(sizeof(struct StmtsNode)); $$->singl = 1; 
+        $$ = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->singl = 1; 
         $$->left = $1; $$->right = NULL;
     } 
     | 
     stmt stmts 
     {
-        $$ = (struct StmtsNode *) malloc(sizeof(struct StmtsNode)); $$->singl = 0; 
+        $$ = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->singl = 0; 
         $$->left = $1; $$->right = $2;
     }
     ;
@@ -72,6 +81,8 @@ stmt:
     ret_stmt { $$ = $1; }
     |
     while_loop { $$ = $1; }  
+    |
+    if_stmt {$$ = $1; }
     |
     var_decl { $$ = $1; }
     ;
@@ -86,14 +97,29 @@ ret_stmt:
 ;
 
 while_loop:
-    WHILE '(' VAR RELOP VAR ')' '{' stmts '}' /* Put exp in place of VAR RELOP VAR and change the code accordingly*/
+    WHILE '(' relop_exp ')' '{' stmts '}' 
     {
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=WHILE_SYNTAX;
-        sprintf($$->initCode,"lw $t0, %s($t8)\nlw $t1, %s($t8)\n", $3->addr,$5->addr);
-        sprintf($$->initJumpCode,"bge $t0, $t1,"); 
-        $$->down=$8;
+        sprintf($$->initCode,"%s", $3);
+        sprintf($$->initJumpCode,"beq $t0, $0,");  //TODO: change $t0 register here
+        $$->down=$6;
 	}
 ;
+
+// for_loop:
+//     FOR '(' exp-option ';' exp-option ';' exp-option ';' ')' '{' stmts '}' {}
+//     |
+//     FOR '(' var_decl exp-option ';' exp-option ';' ')' '{' stmts '}' {}
+// ;
+
+if_stmt:
+    IF '(' relop_exp ')' '{' stmts '}'
+    {
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
+        sprintf($$->initCode,"%s", $3);
+        sprintf($$->initJumpCode,"bge $t0, $0,"); //TODO: change $t0 register here  
+        $$->down=$6;
+    }
 
 var_decl:
     TYPE VAR '=' exp ';'
@@ -102,6 +128,16 @@ var_decl:
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $4, $2->addr);
 	    $$->down=NULL;
     }
+;
+
+relop_exp:
+    x {}//TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
+;
+
+exp-option:
+    exp {}
+    |
+    "" {}
 ;
 
 exp:      
@@ -125,14 +161,14 @@ x:
 /* End of grammar */
 %%
 
-void StmtsTrav(stmtsptr ptr){
+void ASTTrav(ASTptr ptr){
     printf("stmts\n");
     if (ptr==NULL) return;
     if (ptr->singl==1){ 
         StmtTrav(ptr->left);
     } else {
     StmtTrav(ptr->left);
-    StmtsTrav(ptr->right);
+    ASTTrav(ptr->right);
     }
 }
     
@@ -140,14 +176,31 @@ void StmtTrav(stmtptr ptr){
     int ws,nj;
     printf("stmt\n");
     if (ptr==NULL) return;
-    if (ptr->type!=WHILE_SYNTAX){
-        fprintf(fp,"%s\n",ptr->bodyCode);
+
+    else if (ptr->type==WHILE_SYNTAX){
+
+        char *start_label = fresh_local_label("while_start", label_count);
+        char *end_label = fresh_local_label("while_end", label_count);
+        label_count ++;
+
+        fprintf(fp, "%s:\n", start_label);
+        fprintf(fp,"%s\n", ptr->initCode);
+        fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);
+        ASTTrav(ptr->down);
+        fprintf(fp,"j %s\n %s:\n",start_label, end_label);
+
+    } else if (ptr->type==IF_SYNTAX){
+        
+        char *end_label = fresh_local_label("if_end", label_count);
+        label_count ++;
+        
+        fprintf(fp,"%s\n", ptr->initCode);
+        fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);
+        ASTTrav(ptr->down);
+        fprintf(fp,"j %s\n %s:\n",end_label, end_label);
+       
     } else {
-        ws=whileStart; whileStart++;
-        nj=nextJump; nextJump++;
-        fprintf(fp,"LabStartWhile%d:%s\n%s NextPart%d\n",ws,ptr->initCode,ptr->initJumpCode,nj);
-        StmtsTrav(ptr->down);
-        fprintf(fp,"j LabStartWhile%d\nNextPart%d:\n",ws,nj);
+        fprintf(fp,"%s\n",ptr->bodyCode);
     }	  
 }
    
@@ -156,7 +209,7 @@ int main ()
    fp=fopen("asmb.asm","w");
    fprintf(fp,".data\n\n.text\n");
    yyparse ();
-   StmtsTrav(final);
+   ASTTrav(final);
    fclose(fp);
 }
 

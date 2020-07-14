@@ -13,25 +13,26 @@ extern symrec *sym_table;
 symrec *putsym ();
 symrec *getsym ();
 
-typedef struct StmtsNode *stmtsptr;
+typedef struct ASTNode *ASTptr;
 typedef struct StmtNode *stmtptr;
 
 typedef enum {
   RETURN_STATEMENT,
   DEFINE_VAR,
-  WHILE_SYNTAX
+  WHILE_SYNTAX,
+  IF_SYNTAX
 } StmtType;
 
-struct StmtsNode{
+struct ASTNode{
 int singl;
 struct StmtNode *left;
-struct StmtsNode *right;
+struct ASTNode *right;
 };
 
 struct StmtNode{
   StmtType type;
   char bodyCode[1000];
-  struct StmtsNode *down;
+  struct ASTNode *down;
   union {
     char initCode[100];
     char initJumpCode[20];

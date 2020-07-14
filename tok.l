@@ -23,6 +23,8 @@ id  {L}({L}|{D})*
 [ \t\n]+      { /* Ignore whitespace */ }
 "/*"          { comment(); }
 "while"       { return WHILE; }
+"for"         { return FOR; }
+"if"          { return IF; }
 "<"           { yylval.val=2;return RELOP; }
 ">"           {yylval.val=2;return RELOP;  }
 ">="          {yylval.val=2;return RELOP;  } 

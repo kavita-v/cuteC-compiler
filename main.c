@@ -50,19 +50,21 @@ void StmtTrav(stmtptr ptr){
         
         //else condition
         if (ptr->jump != NULL) {
-            char *else_label = fresh_local_label("else", label_count);  
+            char *else_label = fresh_local_label("else", label_count);
+            label_count ++;  
             fprintf(fp, "%s %s\n",ptr->initJumpCode,else_label);    //if false jump to else
             ASTTrav(ptr->down);                                     // if block
             fprintf(fp,"j %s\n%s:\n",end_label, else_label);        // skip else jump to endif
             ASTTrav(ptr->jump);                                     // else block
             fprintf(fp,"%s:\n",end_label);                          //endif
         }else{
+            label_count ++;
             fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);     //if false jump to end
             ASTTrav(ptr->down);                                     // if block
             fprintf(fp,"j %s\n%s:\n",end_label, end_label);         // jump to endif
         }
         
-        label_count ++;
+        
        
     } else if (ptr->type==SYSCALL_SYNTAX){
         fprintf(fp,"%s\n",ptr->bodyCode);

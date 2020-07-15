@@ -11,6 +11,8 @@ symrec *sym_table = (symrec *)0;
 void comment();
 void yyerror();
 
+int linenum = 1;
+
 %}
 
 D			[0-9]
@@ -19,8 +21,9 @@ number      {D}+
 id  {L}({L}|{D})*
 
 %%
+"\n"          { ++linenum; }
 "//"[^\n]*    { /* Discard comments. */ }
-[ \t\n]+      { /* Ignore whitespace */ }
+[ \t]+        { /* Ignore whitespace */ }
 "/*"          { comment(); }
 "while"       { return WHILE; }
 "for"         { return FOR; }
@@ -67,7 +70,6 @@ symrec *getsym (char *sym_name){
 
 /* Function for identifying unterminated multi-line comments */
 
-// TODO: write a test for multiline comments
 void comment(void) {
     /* Consume characters up to the closing comment marker. */
     char curr, prev = 0;

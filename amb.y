@@ -24,6 +24,8 @@ char *fresh_local_label(char *prefix, int label_count) {
 }
 %}
 
+%define parse.error verbose
+
 %union {
 int   val;  /* For returning numbers.                   */
 struct symrec  *tptr;   /* For returning symbol-table pointers      */
@@ -34,7 +36,7 @@ struct ASTNode *ASTptr;
 }
 
 
-/* The above will cause a #line directive to come in calc.tab.h.  The #line directive is typically used by program generators to cause error messages to refer to the original source file instead of to the generated program. */
+/* The above will cause a #line directive to come in amb.tab.h.  The #line directive is typically used by program generators to cause error messages to refer to the original source file instead of to the generated program. */
 
 %token  <val> NUM        /* Integer   */
 %token <val> RELOP LE_OP GE_OP NE_OP EQ_OP AND OR MOD
@@ -297,9 +299,9 @@ x:
 /* End of grammar */
 %%
 
-
+extern int linenum;
 void yyerror (char *s)  /* Called by yyparse on error */
 {
-  printf ("%s\n", s);
+  fprintf (stderr, " line %d: %s\n", linenum, s);
 }
 

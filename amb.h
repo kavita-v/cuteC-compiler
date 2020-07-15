@@ -42,7 +42,7 @@ struct StmtNode{
   };
 };
 
-
+char *fresh_local_label(char *prefix, int label_count);
 
 
 /*void StmtsTrav(stmtsptr ptr);

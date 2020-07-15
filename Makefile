@@ -1,5 +1,5 @@
-a.out: amb.tab.o lex.yy.o
-	cc -g amb.tab.o lex.yy.o -lfl
+cutec: amb.tab.o lex.yy.o main.c
+	cc -g amb.tab.o lex.yy.o main.c -lfl
 
 amb.tab.o: amb.tab.h amb.tab.c
 	cc -g -c amb.tab.c

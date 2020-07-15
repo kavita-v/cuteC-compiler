@@ -295,6 +295,16 @@ relop_exp:
     {
         sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nor $t0, $t1,$t2",$1,$3);
     }
+    |
+    exp
+    {
+        sprintf($$, "%s\nmove $t1, $t0\nsne $t0, $t1, $0", $1);
+    }
+    |
+    '(' relop_exp ')'        
+    { 
+        sprintf($$,"\n%s",$2); 
+    }
     // The logical expression evaluates and stores the result (T/F) in $t0. 
     // Can be used directly in conditionals and loops by bne with $0
 ;

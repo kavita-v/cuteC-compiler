@@ -38,8 +38,7 @@ struct ASTNode *ASTptr;
 
 /* The above will cause a #line directive to come in amb.tab.h.  The #line directive is typically used by program generators to cause error messages to refer to the original source file instead of to the generated program. */
 
-%token  <val> NUM        /* Integer   */
-%token <val> RELOP LE_OP GE_OP NE_OP EQ_OP AND OR MOD
+%token  <val> NUM  
 %token  WHILE
 %token FOR
 %token IF ELSE
@@ -54,8 +53,12 @@ struct ASTNode *ASTptr;
 
 
 %right '='
+%left OR
+%left AND
+%left NE_OP EQ_OP
+%left LE_OP GE_OP '<' '>'
 %left '-' '+'
-%left '*' '/' '%'
+%left '*' '/' MOD
 %left NEG
 
 /* Grammar follows */
@@ -236,7 +239,7 @@ var_assign:
 ;
 
 exp_as_stmt:
-    exp ';'
+    exp-common ';'
     {
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=EXP_STATEMENT;
 	    sprintf($$->bodyCode,"%s\n", $1);

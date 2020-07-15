@@ -114,11 +114,21 @@ ret_stmt:
 while_loop:
     WHILE '(' relop_exp ')' '{' stmts '}' 
     {
+        printf("entered while\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=WHILE_SYNTAX;
-        sprintf($$->initCode,"%s", $3);
-        sprintf($$->initJumpCode,"beq $t0, $0,");  //TODO: change $t0 register here
+        sprintf($$->bodyCode,"%s", $3);
+        sprintf($$->initJumpCode,"beq $t0, $0,");  
         $$->down=$6;
 	}
+    |
+    WHILE '(' relop_exp ')' stmt
+    {
+        printf("entered while\n");
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=WHILE_SYNTAX;
+        sprintf($$->bodyCode,"%s", $3);
+        sprintf($$->initJumpCode,"beq $t0, $0,");  
+        $$->down=$5;
+    }
 ;
 
 // for_loop:
@@ -131,9 +141,17 @@ if_stmt:
     IF '(' relop_exp ')' '{' stmts '}'
     {
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
-        sprintf($$->initCode,"%s", $3);
-        sprintf($$->initJumpCode,"bge $t0, $0,"); //TODO: change $t0 register here  
+        sprintf($$->bodyCode,"%s", $3);
+        sprintf($$->initJumpCode,"bge $t0, $0,");   
         $$->down=$6;
+    }
+    |
+    IF '(' relop_exp ')' stmt
+    {
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
+        sprintf($$->bodyCode,"%s", $3);
+        sprintf($$->initJumpCode,"bge $t0, $0,");   
+        $$->down=$5;
     }
 ;
 
@@ -215,7 +233,7 @@ relop_exp:
     {
         sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nsne $t0, $t1,$t2",$1,$3);
     }
-
+    //TODO add ==
     //TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
 ;
 
@@ -226,19 +244,19 @@ exp-option:
 ;
 
 exp:      
-    x              { sprintf($$,"%s",$1); count=(count+1)%2; }
+    x              { sprintf($$,"\n%s",$1); count=(count+1)%2; }
     |
-    exp '+' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nadd $t0, $t0, $t1",$1,$3); }
+    exp '+' exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nadd $t0, $t0, $t1",$1,$3); }
     | 
-    exp '-' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nsub $t0, $t0, $t1",$1,$3); }
+    exp '-' exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nsub $t0, $t0, $t1",$1,$3); }
     | 
-    exp '*' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nmul $t0, $t0, $t1",$1,$3); }
+    exp '*' exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nmul $t0, $t0, $t1",$1,$3); }
     |
-    exp '/' exp        { sprintf($$,"%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\ndiv $t0, $t0, $t1",$1,$3); }
+    exp '/' exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\ndiv $t0, $t0, $t1",$1,$3); }
     | 
-    '-' exp  %prec NEG { sprintf($$,"%s\nsub $t0, $zero, $t0",$2); }
+    '-' exp  %prec NEG { sprintf($$,"\n%s\nsub $t0, $zero, $t0",$2); }
     | 
-    '(' exp ')'        { sprintf($$,$2); }
+    '(' exp ')'        { sprintf($$,"\n%s",$2); }
 ;
 
 x:   
@@ -273,20 +291,21 @@ void StmtTrav(stmtptr ptr){
         label_count ++;
 
         fprintf(fp, "%s:\n", start_label);
-        fprintf(fp,"%s\n", ptr->initCode);
+        fprintf(fp,"%s\n", ptr->bodyCode);
         fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);
         ASTTrav(ptr->down);
-        fprintf(fp,"j %s\n %s:\n",start_label, end_label);
+        fprintf(fp,"j %s\n%s:",start_label, end_label);
 
     } else if (ptr->type==IF_SYNTAX){
         
         char *end_label = fresh_local_label("if_end", label_count);
         label_count ++;
-        
-        fprintf(fp,"%s\n", ptr->initCode);
+        printf("reached body\n");
+        fprintf(fp,"%s\n", ptr->bodyCode);
         fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);
+        printf("reached trav\n");
         ASTTrav(ptr->down);
-        fprintf(fp,"j %s\n %s:\n",end_label, end_label);
+        fprintf(fp,"j %s\n%s:",end_label, end_label);
        
     } else if (ptr->type==SYSCALL_SYNTAX){
         fprintf(fp,"%s\n",ptr->bodyCode);

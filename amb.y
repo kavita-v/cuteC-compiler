@@ -128,8 +128,10 @@ while_loop:
         printf("entered while\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=WHILE_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
-        sprintf($$->initJumpCode,"beq $t0, $0,");  
-        $$->down=$5;
+        sprintf($$->initJumpCode,"beq $t0, $0,");
+        // we need to creat an ASTNode for the stmt
+        $$->down = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->down->singl = 1; 
+        $$->down->left = $5; $$->down->right = NULL;
     }
 ;
 
@@ -153,7 +155,9 @@ if_stmt:
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
         sprintf($$->initJumpCode,"bge $t0, $0,");   
-        $$->down=$5;
+        // we need to creat an ASTNode for the stmt
+        $$->down = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->down->singl = 1; 
+        $$->down->left = $5; $$->down->right = NULL;
     }
 ;
 
@@ -292,7 +296,7 @@ x:
 %%
 
 void ASTTrav(ASTptr ptr){
-    printf("stmts\n");
+    //printf("stmts\n");
     if (ptr==NULL) return;
     if (ptr->singl==1){ 
         StmtTrav(ptr->left);
@@ -304,7 +308,7 @@ void ASTTrav(ASTptr ptr){
     
 void StmtTrav(stmtptr ptr){
     int ws,nj;
-    printf("stmt\n");
+    //printf("stmt\n");
     if (ptr==NULL) return;
 
     else if (ptr->type==WHILE_SYNTAX){
@@ -323,10 +327,8 @@ void StmtTrav(stmtptr ptr){
         
         char *end_label = fresh_local_label("if_end", label_count);
         label_count ++;
-        printf("reached body\n");
         fprintf(fp,"%s\n", ptr->bodyCode);
         fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);
-        printf("reached trav\n");
         ASTTrav(ptr->down);
         fprintf(fp,"j %s\n%s:",end_label, end_label);
        
@@ -346,6 +348,9 @@ int main ()
    yyparse ();
    ASTTrav(final);
    fclose(fp);
+
+   printf("Written asmb.asm\nRun the assembly on MARS Simulator.\n");
+   return 0;
 }
 
 void yyerror (char *s)  /* Called by yyparse on error */

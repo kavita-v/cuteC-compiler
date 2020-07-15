@@ -25,12 +25,13 @@ id  {L}({L}|{D})*
 "while"       { return WHILE; }
 "for"         { return FOR; }
 "if"          { return IF; }
-"<="          { return LE_OP;}
-">="          { return GE_OP;}
-"!="          { return NE_OP;}
-"=="          { return EQ_OP;}
-"&&"          { return AND;}
-"||"          { return OR;}
+"<="          { return LE_OP; }
+">="          { return GE_OP; }
+"!="          { return NE_OP; }
+"=="          { return EQ_OP; }
+"&&"          { return AND; }
+"||"          { return OR; }
+"%"           { return MOD; }
 {number}      { sscanf(yytext,"%d",&yylval.val);return NUM; }
 "return"      { return RETURN; }
 "int"         { yylval.val=1;return TYPE; }

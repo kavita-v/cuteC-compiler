@@ -250,7 +250,8 @@ relop_exp:
     {
         sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nor $t0, $t1,$t2",$1,$3);
     }
-    //TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
+    // The logical expression evaluates and stores the result (T/F) in $t0. 
+    // Can be used directly in conditionals and loops by bne with $0
 ;
 
 exp-option:
@@ -275,11 +276,15 @@ exp:
     exp '*' exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nmul $t0, $t0, $t1",$1,$3); }
     |
     exp '/' exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\ndiv $t0, $t0, $t1",$1,$3); }
+    |
+    exp MOD exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\nrem $t0, $t0, $t1",$1,$3); }
     | 
     '-' exp  %prec NEG { sprintf($$,"\n%s\nneg $t0, $t0",$2); }
     | 
     '(' exp ')'        { sprintf($$,"\n%s",$2); }
     // TODO: add %
+    // The arithmetic expression evaluates and stores the result in $t0. 
+    // Using push and pop in stack so there is no issue of register allocation
 ;
 
 x:   

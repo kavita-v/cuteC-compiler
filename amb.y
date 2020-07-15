@@ -39,7 +39,7 @@ struct ASTNode *ASTptr;
 /* The above will cause a #line directive to come in calc.tab.h.  The #line directive is typically used by program generators to cause error messages to refer to the original source file instead of to the generated program. */
 
 %token  <val> NUM        /* Integer   */
-%token <val> RELOP LE_OP GE_OP NE_OP
+%token <val> RELOP LE_OP GE_OP NE_OP EQ_OP AND OR
 %token  WHILE
 %token FOR
 %token IF
@@ -109,6 +109,8 @@ ret_stmt:
 	    sprintf($$->bodyCode,"\n%s\nli $v0, 1\nmove $a0,$t0\nsyscall\n\nli $v0, 10\nsyscall\n", $2);
 	    $$->down=NULL;
     }
+    // Currently, value of return statement is shifted to $a0 so that it gets printed
+    // $v0 is usually for return values but it needs to be set to 1 so that syscall works
 ;
 
 while_loop:
@@ -229,11 +231,25 @@ relop_exp:
         sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nsge $t0, $t1,$t2",$1,$3);
     }
     |
-    exp NE_OP exp
+    exp-common NE_OP exp-common
     {
         sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nsne $t0, $t1,$t2",$1,$3);
     }
-    //TODO add ==
+    |
+    exp-common EQ_OP exp-common
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nseq $t0, $t1,$t2",$1,$3);
+    }
+    |
+    exp-common AND exp-common
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nand $t0, $t1,$t2",$1,$3);
+    }
+    |
+    exp-common OR exp-common
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nor $t0, $t1,$t2",$1,$3);
+    }
     //TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
 ;
 
@@ -242,6 +258,12 @@ exp-option:
     |
     "" {}
 ;
+
+exp-common:
+    exp {$$=$1;}
+    |
+    relop_exp   {$$=$1}
+    ;
 
 exp:      
     x              { sprintf($$,"\n%s",$1); count=(count+1)%2; }
@@ -254,9 +276,10 @@ exp:
     |
     exp '/' exp        { sprintf($$,"\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\n%s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nlw $t0, 0($sp)\naddi $sp, $sp, 4\ndiv $t0, $t0, $t1",$1,$3); }
     | 
-    '-' exp  %prec NEG { sprintf($$,"\n%s\nsub $t0, $zero, $t0",$2); }
+    '-' exp  %prec NEG { sprintf($$,"\n%s\nneg $t0, $t0",$2); }
     | 
     '(' exp ')'        { sprintf($$,"\n%s",$2); }
+    // TODO: add %
 ;
 
 x:   
@@ -330,6 +353,3 @@ void yyerror (char *s)  /* Called by yyparse on error */
   printf ("%s\n", s);
 }
 
-// Currently, value of return statement is shifted to $a0 so that it gets printed
-// $v0 is usually for return values but it needs to be set to 1 so that syscall works
-// figure out what else can be done

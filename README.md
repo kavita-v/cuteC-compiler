@@ -34,7 +34,7 @@ Open asmb.asm file in Mars. Assemble and Run.
 - Only one return statement that terminates the program. Return value is printed out.
 - Declare all variables to be of type `int` 
 - Multi-operand arithmetic and logical expressions follow BODMAS precedence rule
-- For loop should follow the format: `for (i=0;i<10;i=i+1){ \\ statements }`
+- For loop should follow the format: `for (i=0;i<10;i=i+1)`
 - For loop works in the same scope as the main function. So, same variable names cannot be reused inside the for loop.
 
 ## Contributors:

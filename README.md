@@ -23,7 +23,8 @@ Open asmb.asm file in Mars. Assemble and Run.
 - Variable declaration and assignment (local)
 - Supports `printf()` syscall 
 - Supports `while` loops 
-- Supports `for` loops  
+- Supports `for` loops
+- Supports nested loops
 - Supports `if, else if, else` statements (nested ifs)
 - Verbose error reporting with line number 
 - Unterminated multiline comments reported as error

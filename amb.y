@@ -286,7 +286,6 @@ exp:
     '-' exp  %prec NEG { sprintf($$,"\n%s\nneg $t0, $t0",$2); }
     | 
     '(' exp ')'        { sprintf($$,"\n%s",$2); }
-    // TODO: add %
     // The arithmetic expression evaluates and stores the result in $t0. 
     // Using push and pop in stack so there is no issue of register allocation
 ;

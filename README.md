@@ -23,11 +23,12 @@ Open asmb.asm file in Mars. Assemble and Run.
 - printf() syscall added
 - support for while loop added
 - supports if-else statement (no else if support yet)
+- Verbose error reporting with line number
+- Unterminated multiline comments reported as error
 
 ### Things to look out for
 - Program should have exactly one int main() function. 
 - Only one return statement that terminates the program. Return value is printed out.
-- Unterminated multiline comments identified.
 - Declare variables of type int 
 - Return arithmetic expressions (like a+b) or logical expressions (like a>b)
 - multi-operand arithmetic expressions with BODMAS precedence rule

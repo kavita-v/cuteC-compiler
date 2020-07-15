@@ -39,7 +39,7 @@ struct ASTNode *ASTptr;
 /* The above will cause a #line directive to come in calc.tab.h.  The #line directive is typically used by program generators to cause error messages to refer to the original source file instead of to the generated program. */
 
 %token  <val> NUM        /* Integer   */
-%token <val> RELOP LE_OP GE_OP NE_OP EQ_OP AND OR
+%token <val> RELOP LE_OP GE_OP NE_OP EQ_OP AND OR MOD
 %token  WHILE
 %token FOR
 %token IF
@@ -47,7 +47,7 @@ struct ASTNode *ASTptr;
 %token <val> TYPE
 %token <tptr> MAIN VAR  
 %token <nData> SYSCALL
-%type  <c>  exp relop_exp
+%type  <c>  exp relop_exp exp-common
 %type <nData> x
 %type <ASTptr> stmts
 %type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign exp_as_stmt syscll
@@ -265,9 +265,9 @@ exp-option:
 ;
 
 exp-common:
-    exp {$$=$1;}
+    exp { sprintf($$,$1); }
     |
-    relop_exp   {$$=$1}
+    relop_exp   { sprintf($$,$1); }
     ;
 
 exp:      

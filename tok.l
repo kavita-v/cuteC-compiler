@@ -25,12 +25,9 @@ id  {L}({L}|{D})*
 "while"       { return WHILE; }
 "for"         { return FOR; }
 "if"          { return IF; }
-"<"           { yylval.val=2;return RELOP; }
-">"           {yylval.val=2;return RELOP;  }
-">="          {yylval.val=2;return RELOP;  } 
-"<="          {yylval.val=2;return RELOP;  }
-"!="          {yylval.val=2;return RELOP;  }
-"=="          {yylval.val=2;return RELOP;  }
+"<="          { yylval.val=4;return LE_OP;}
+">="          { yylval.val=5;return GE_OP;}
+"!="          { yylval.val=6;return NE_OP;}
 {number}      { sscanf(yytext,"%d",&yylval.val);return NUM; }
 "return"      { return RETURN; }
 "int"         { yylval.val=1;return TYPE; }

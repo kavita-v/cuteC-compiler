@@ -45,11 +45,24 @@ void StmtTrav(stmtptr ptr){
     } else if (ptr->type==IF_SYNTAX){
         
         char *end_label = fresh_local_label("if_end", label_count);
-        label_count ++;
+        //check if condition
         fprintf(fp,"%s\n", ptr->bodyCode);
-        fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);
-        ASTTrav(ptr->down);
-        fprintf(fp,"j %s\n%s:",end_label, end_label);
+        
+        //else condition
+        if (ptr->jump != NULL) {
+            char *else_label = fresh_local_label("else", label_count);  
+            fprintf(fp, "%s %s\n",ptr->initJumpCode,else_label);    //if false jump to else
+            ASTTrav(ptr->down);                                     // if block
+            fprintf(fp,"j %s\n%s:\n",end_label, else_label);        // skip else jump to endif
+            ASTTrav(ptr->jump);                                     // else block
+            fprintf(fp,"%s:\n",end_label);                          //endif
+        }else{
+            fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label);     //if false jump to end
+            ASTTrav(ptr->down);                                     // if block
+            fprintf(fp,"j %s\n%s:\n",end_label, end_label);         // jump to endif
+        }
+        
+        label_count ++;
        
     } else if (ptr->type==SYSCALL_SYNTAX){
         fprintf(fp,"%s\n",ptr->bodyCode);

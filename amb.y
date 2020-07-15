@@ -191,7 +191,17 @@ syscll:
 ;
 
 relop_exp:
-    x {}//TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
+    exp '>' exp
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nsgt $t0, $t1,$t2",$1,$3); 
+    }
+    |
+    exp '<' exp
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nslt $t0, $t1,$t2",$1,$3); 
+    }
+    
+    //TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
 ;
 
 exp-option:

@@ -96,6 +96,5 @@ int main ()
    ASTTrav(final);
    fclose(fp);
 
-   printf("Written asmb.asm\nRun the assembly on MARS Simulator.\n");
    return 0;
 }

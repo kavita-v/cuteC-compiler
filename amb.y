@@ -39,7 +39,7 @@ struct ASTNode *ASTptr;
 /* The above will cause a #line directive to come in calc.tab.h.  The #line directive is typically used by program generators to cause error messages to refer to the original source file instead of to the generated program. */
 
 %token  <val> NUM        /* Integer   */
-%token <val> RELOP
+%token <val> RELOP LE_OP GE_OP NE_OP
 %token  WHILE
 %token FOR
 %token IF
@@ -200,7 +200,22 @@ relop_exp:
     {
         sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nslt $t0, $t1,$t2",$1,$3); 
     }
-    
+    |
+    exp LE_OP exp
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nsle $t0, $t1,$t2",$1,$3);
+    }
+    |
+    exp GE_OP exp
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nsge $t0, $t1,$t2",$1,$3);
+    }
+    |
+    exp NE_OP exp
+    {
+        sprintf($$,"%s \nsw $t0, -4($sp)\nsub $sp, $sp, 4\n %s\nsw $t0, -4($sp)\nsub $sp, $sp, 4\nlw $t2, 0($sp)\naddi $sp, $sp, 4\nlw $t1, 0($sp)\naddi $sp, $sp, 4\nsne $t0, $t1,$t2",$1,$3);
+    }
+
     //TODO add here @mohit //add the instruction for register loading in $$. The beq is already there in both if/while.
 ;
 

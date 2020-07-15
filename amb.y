@@ -40,14 +40,14 @@ struct ASTNode *ASTptr;
 %token <val> RELOP LE_OP GE_OP NE_OP EQ_OP AND OR MOD
 %token  WHILE
 %token FOR
-%token IF
+%token IF ELSE
 %token RETURN FORMAT
 %token <val> TYPE
 %token <tptr> MAIN VAR  
 %token <nData> SYSCALL
 %type  <c>  exp relop_exp exp-common
 %type <nData> x
-%type <ASTptr> stmts
+%type <ASTptr> stmts else_stmt
 %type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign exp_as_stmt syscll
 
 
@@ -140,22 +140,63 @@ while_loop:
 // ;
 
 if_stmt:
-    IF '(' relop_exp ')' '{' stmts '}'
+    IF '(' relop_exp ')' '{' stmts '}' else_stmt
     {
+        printf("entered if\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
         sprintf($$->initJumpCode,"bge $t0, $0,");   
         $$->down=$6;
+        $$->jump=$8;
     }
     |
-    IF '(' relop_exp ')' stmt
+    IF '(' relop_exp ')' stmt else_stmt
     {
+        printf("entered if\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
         sprintf($$->initJumpCode,"bge $t0, $0,");   
         // we need to creat an ASTNode for the stmt
         $$->down = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->down->singl = 1; 
         $$->down->left = $5; $$->down->right = NULL;
+        $$->jump=$6;
+    }
+    |
+    IF '(' relop_exp ')' '{' stmts '}'
+    {
+        printf("entered if\n");
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
+        sprintf($$->bodyCode,"%s", $3);
+        sprintf($$->initJumpCode,"bge $t0, $0,");   
+        $$->down=$6;
+        $$->jump=NULL;
+    }
+    |
+    IF '(' relop_exp ')' stmt
+    {
+        printf("entered if\n");
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
+        sprintf($$->bodyCode,"%s", $3);
+        sprintf($$->initJumpCode,"bge $t0, $0,");   
+        // we need to creat an ASTNode for the stmt
+        $$->down = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->down->singl = 1; 
+        $$->down->left = $5; $$->down->right = NULL;
+        $$->jump=NULL;
+    }
+;
+
+else_stmt:
+    ELSE '{' stmts '}'  
+    {   printf("entered else\n"); 
+        $$ = $3;
+    }
+    |
+    ELSE stmt
+    {
+        printf("entered else\n");
+        // we need to creat an ASTNode for the stmt
+        $$ = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->singl = 1; 
+        $$->left = $2; $$->right = NULL;
     }
 ;
 

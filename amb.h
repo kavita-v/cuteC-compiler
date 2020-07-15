@@ -36,6 +36,7 @@ struct StmtNode{
   StmtType type;
   char bodyCode[1000];
   struct ASTNode *down;
+  struct ASTNode *jump;
   union {
     char initCode[100];
     char initJumpCode[20];

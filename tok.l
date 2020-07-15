@@ -25,6 +25,7 @@ id  {L}({L}|{D})*
 "while"       { return WHILE; }
 "for"         { return FOR; }
 "if"          { return IF; }
+"else"        { return ELSE; }
 "<="          { return LE_OP; }
 ">="          { return GE_OP; }
 "!="          { return NE_OP; }

@@ -147,7 +147,7 @@ if_stmt:
         printf("entered if\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
-        sprintf($$->initJumpCode,"bge $t0, $0,");   
+        sprintf($$->initJumpCode,"beq $t0, $0,");   
         $$->down=$6;
         $$->jump=$8;
     }
@@ -157,7 +157,7 @@ if_stmt:
         printf("entered if\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
-        sprintf($$->initJumpCode,"bge $t0, $0,");   
+        sprintf($$->initJumpCode,"beq $t0, $0,");   
         // we need to creat an ASTNode for the stmt
         $$->down = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->down->singl = 1; 
         $$->down->left = $5; $$->down->right = NULL;
@@ -169,7 +169,7 @@ if_stmt:
         printf("entered if\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
-        sprintf($$->initJumpCode,"bge $t0, $0,");   
+        sprintf($$->initJumpCode,"beq $t0, $0,");   
         $$->down=$6;
         $$->jump=NULL;
     }
@@ -179,7 +179,7 @@ if_stmt:
         printf("entered if\n");
         $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=IF_SYNTAX;
         sprintf($$->bodyCode,"%s", $3);
-        sprintf($$->initJumpCode,"bge $t0, $0,");   
+        sprintf($$->initJumpCode,"beq $t0, $0,");   
         // we need to creat an ASTNode for the stmt
         $$->down = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->down->singl = 1; 
         $$->down->left = $5; $$->down->right = NULL;

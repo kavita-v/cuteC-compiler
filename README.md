@@ -30,7 +30,7 @@ Open asmb.asm file in Mars. Assemble and Run.
 - Unterminated multiline comments reported as error
 - Can return arithmetic expressions (like a+b) or logical expressions (like a>b)
 
-### Things to look out for
+## Things to look out for
 - Program should have exactly one `int main()` function. 
 - Only one return statement that terminates the program. Return value is printed out.
 - Declare all variables to be of type `int` 
@@ -43,4 +43,4 @@ Open asmb.asm file in Mars. Assemble and Run.
 - Heer Ambavi (16110062)
 - Mohit Mina (17110078)
 
-We would like to thank Prof. Bireswar Das, IIT Gandhinagar for the opportunity :).
+We would like to thank Prof. Bireswar Das, IIT Gandhinagar for the opportunity :)

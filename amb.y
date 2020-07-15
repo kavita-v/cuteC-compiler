@@ -38,18 +38,17 @@ struct ASTNode *ASTptr;
 
 /* The above will cause a #line directive to come in amb.tab.h.  The #line directive is typically used by program generators to cause error messages to refer to the original source file instead of to the generated program. */
 
-%token  <val> NUM  
-%token  WHILE
-%token FOR
-%token IF ELSE
+%token <val> NUM
+%token <val> RELOP LE_OP GE_OP NE_OP EQ_OP AND OR MOD
+%token  WHILE FOR IF ELSE
 %token RETURN FORMAT
 %token <val> TYPE
 %token <tptr> MAIN VAR  
-%token <nData> SYSCALL
+%token <nData> SYSCALL BREAK
 %type  <c>  exp relop_exp exp-common
 %type <nData> x
 %type <ASTptr> stmts else_stmt
-%type <stmtptr> while_loop var_decl ret_stmt if_stmt stmt var_assign exp_as_stmt syscll
+%type <stmtptr> while_loop for_loop for_exp var_decl ret_stmt if_stmt stmt var_assign exp_as_stmt syscll
 
 
 %right '='
@@ -87,11 +86,13 @@ stmt:
     |
     while_loop { $$ = $1; }  
     |
+    for_loop {$$ = $1;}
+    |
     if_stmt {$$ = $1; }
     |
-    var_decl { $$ = $1; }
+    var_decl ';' { $$ = $1; }
     |
-    var_assign { $$ = $1; }
+    var_assign ';' { $$ = $1; }
     |
     exp_as_stmt { $$ = $1; }
     |
@@ -138,11 +139,35 @@ while_loop:
     }
 ;
 
-// for_loop:
-//     FOR '(' exp-option ';' exp-option ';' exp-option ';' ')' '{' stmts '}' {}
-//     |
-//     FOR '(' var_decl exp-option ';' exp-option ';' ')' '{' stmts '}' {}
-// ;
+for_loop:
+    FOR '(' for_exp ';' relop_exp ';' for_exp ')' '{' stmts '}' 
+    {
+        printf("entered for\n");
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=FOR_SYNTAX;
+        sprintf($$->bodyCode,"%s",$5);
+        sprintf($$->initJumpCode,"beq $t0, $0,");
+        sprintf($$->for_exp,"%s",$3->bodyCode);
+        sprintf($$->for_exp2,"%s",$7->bodyCode);
+        $$->down=$10;
+    }
+    |
+    FOR '(' for_exp ';' relop_exp ';' for_exp ')' stmt 
+    {
+        printf("entered for\n");
+        $$ = (struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=FOR_SYNTAX;
+        sprintf($$->bodyCode,"%s",$5);
+        sprintf($$->initJumpCode,"beq $t0, $0,");
+        sprintf($$->for_exp,"%s",$3->bodyCode);
+        sprintf($$->for_exp2,"%s",$7->bodyCode);
+        // we need to creat an ASTNode for the stmt
+        $$->down = (struct ASTNode *) malloc(sizeof(struct ASTNode)); $$->down->singl = 1; 
+        $$->down->left = $9; $$->down->right = NULL;
+    }
+;
+
+for_exp:
+    var_assign {$$ = $1;} | var_decl {$$ = $1;}
+;
 
 if_stmt:
     IF '(' relop_exp ')' '{' stmts '}' else_stmt
@@ -206,14 +231,14 @@ else_stmt:
 ;
 
 var_decl:
-    TYPE VAR '=' exp ';'
+    TYPE VAR '=' exp
     {
         $$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=DEFINE_VAR;
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $4, $2->addr);
 	    $$->down=NULL;
     }
     |
-    TYPE VAR ';'
+    TYPE VAR
     {
         $$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=DEFINE_VAR;
 	    sprintf($$->bodyCode,"li $t0, 0\nsw $t0,%s($t8)\n", $2->addr);
@@ -223,7 +248,7 @@ var_decl:
 ;
 
 var_assign:
-    VAR '=' exp ';'
+    VAR '=' exp
     {
         $$=(struct StmtNode *) malloc(sizeof(struct StmtNode)); $$->type=ASSIGN_VAR;
 	    sprintf($$->bodyCode,"%s\nsw $t0,%s($t8)\n", $3, $1->addr);
@@ -312,11 +337,6 @@ relop_exp:
     // Can be used directly in conditionals and loops by bne with $0
 ;
 
-exp-option:
-    exp {}
-    |
-    "" {}
-;
 
 exp-common:
     exp { sprintf($$,$1); }

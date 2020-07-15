@@ -70,6 +70,19 @@ void StmtTrav(stmtptr ptr){
         fprintf(fp,"%s\n",ptr->bodyCode);
         fprintf(fp, "li $v0, 1\nmove $a0, $t0\nsyscall\n"); //assuming exp is stored in $t0 TODO: @mohit chnge
         
+    }else if (ptr->type==FOR_SYNTAX){
+        char *start_label = fresh_local_label("for_start", label_count);
+        char *end_label = fresh_local_label("for_end", label_count);
+        label_count ++;
+
+        fprintf(fp, "%s\n", ptr->for_exp);                  // add initial exp 
+        fprintf(fp, "%s:\n", start_label);                  //add start label
+        fprintf(fp,"%s\n", ptr->bodyCode);                  //check loop condition
+        fprintf(fp, "%s %s\n",ptr->initJumpCode,end_label); // jump if false 
+        ASTTrav(ptr->down);                                 //add statement code
+        fprintf(fp, "%s\n",ptr->for_exp2);                  //add evaluation exp
+        fprintf(fp,"j %s\n%s:",start_label, end_label);     // jump back to start label
+
     }else{
         fprintf(fp,"%s\n",ptr->bodyCode);
     }	  

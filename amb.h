@@ -23,7 +23,8 @@ typedef enum {
   IF_SYNTAX,
   ASSIGN_VAR,
   EXP_STATEMENT,
-  SYSCALL_SYNTAX
+  SYSCALL_SYNTAX,
+  FOR_SYNTAX
 } StmtType;
 
 struct ASTNode{
@@ -35,6 +36,8 @@ struct ASTNode *right;
 struct StmtNode{
   StmtType type;
   char bodyCode[1000];
+  char for_exp[1000];
+  char for_exp2[1000];
   struct ASTNode *down;
   struct ASTNode *jump;
   union {
